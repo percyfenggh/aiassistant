@@ -1,0 +1,31 @@
+# OS-specific
+.DS_Store
+
+# Dependency directories
+node_modules/
+
+# Build artifacts
+dist/
+build/
+out/
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+env/
+.env/
+venv/
+.venv/
+
+# Editor directories
+.idea/
+.vscode/
+
