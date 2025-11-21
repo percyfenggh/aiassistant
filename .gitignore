@@ -1,13 +1,13 @@
 # OS-specific
 .DS_Store
 
-# Dependency directories
-node_modules/
-
 # Build artifacts
 dist/
 build/
 out/
+
+# Dependency directories
+node_modules/
 
 # Logs
 npm-debug.log*
