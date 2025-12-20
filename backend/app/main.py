@@ -1,7 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Literal
+
+from .providers import get_provider
+from .providers.base import LLMProvider
 
 
 class ChatMessage(BaseModel):
@@ -27,6 +30,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize LLM provider
+try:
+    provider: LLMProvider = get_provider()
+except Exception:
+    provider = None
+
 
 @app.get("/health")
 async def health() -> dict:
@@ -36,20 +45,26 @@ async def health() -> dict:
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
     """
-    Placeholder chat endpoint. Echoes the last user message and can be replaced
-    with real model integration later on.
+    Chat endpoint that sends messages to the configured LLM provider.
     """
-    fallback = "Hello! I'm not connected to a model yet, but I'm ready when you are."
-    last_user_message = next(
-        (msg.content for msg in reversed(request.messages) if msg.role == "user"),
-        None,
-    )
+    if not request.messages:
+        raise HTTPException(
+            status_code=400, detail="At least one message is required"
+        )
 
-    reply_text = (
-        f"You said: {last_user_message}"
-        if last_user_message
-        else fallback
-    )
+    if provider is None:
+        raise HTTPException(
+            status_code=500,
+            detail="LLM provider not initialized",
+        )
+
+    try:
+        reply_text = await provider.chat(request.messages)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get response from LLM provider: {str(e)}",
+        )
 
     reply = ChatMessage(role="assistant", content=reply_text)
     return ChatResponse(reply=reply)
